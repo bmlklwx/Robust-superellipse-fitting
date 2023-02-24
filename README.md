@@ -6,11 +6,12 @@ A 2D version of the EMS algorithm: [CVPR 2022] Robust and Accurate Superquadric 
 
 The original work is to fit [superquadrics](https://en.wikipedia.org/wiki/Superellipsoid) (3D generalization of superellipse) to point clouds.
 This is a simple variant to the original paper to solve [superellipse](https://en.wikipedia.org/wiki/Superellipse)(also know as Lamé curve) fitting problem in 2D cases.
-The demo shows the fitting results to randomly generated superellipse-shaped point clouds, with large amount of noise and outliers.
+The demo (test_script.m) shows the fitting results to randomly generated superellipse-shaped point clouds, with large amount of noise and outliers.
+This repo also contains MATLAB functions to sample points almost uniformly on the side of superellipse, and to draw superellipse.
 
-<img src="/figures/demo1.jpg" alt="superquadrics1" width="200"/><img src="/figures/demo2.jpg" alt="superquadrics2" width="200"/><img src="/figures/demo3.jpg" alt="superquadrics3" width="200"/>
+<img src="/figures/demo1.jpg" alt="superquadrics1" width="250"/><img src="/figures/demo2.jpg" alt="superquadrics2" width="250"/><img src="/figures/demo3.jpg" alt="superquadrics3" width="250"/>
 
-<img src="/figures/demo4.jpg" alt="superquadrics4" width="200"/><img src="/figures/demo5.jpg" alt="superquadrics5" width="200"/><img src="/figures/demo6.jpg" alt="superquadrics6" width="200"/>
+<img src="/figures/demo4.jpg" alt="superquadrics4" width="250"/><img src="/figures/demo5.jpg" alt="superquadrics5" width="250"/><img src="/figures/demo6.jpg" alt="superquadrics6" width="250"/>
 
 For visitors interested in more complex 3D superquadrics fitting, please visit this [repository](https://github.com/bmlklwx/EMS-superquadric_fitting).
 
