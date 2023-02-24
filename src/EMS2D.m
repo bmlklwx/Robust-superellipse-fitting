@@ -127,7 +127,7 @@ for iterEM = 1 : iterEM_max
         point_rot_current = R_current' * point - R_current' * x(5 : 6)';
         ub_a = 1.1 * [max(abs(point_rot_current(1, :))), ...
             max(abs(point_rot_current(2, :)))];
-        ub = [2.0 ub_a  2*pi ub_a];
+        ub = [2.0 ub_a  2 * pi ub_a];
         lb = [0.001 0.01 0.01 -2*pi -ub_a];
     end
     
@@ -196,7 +196,7 @@ for iterEM = 1 : iterEM_max
         switch_success = 0;
         
         % duality similarity
-        eul_rot = x(4) + 45*pi/180;
+        eul_rot = x(4) + 45 * pi / 180;
         eul_rot = atan(sin(eul_rot)/cos(eul_rot));
         x_candidate = [max(2 - x(1), 1e-2), ((1 - sqrt(2)) * x(1) + sqrt(2)) * min(x(2), x(3)) * ones(1, 2), eul_rot, x(5 : 6)];
         %-------------------------------------------
@@ -219,7 +219,7 @@ for iterEM = 1 : iterEM_max
             ub = [2.0 ub_a  2*pi ub_a];
             lb = [0.0 0.01 0.01 -2*pi -ub_a];
         end
-        
+             
         [x_switch, ~] = lsqnonlin(cost_func, x_candidate, lb, ub, options);
         %-------------------------------------------
         if para.DebugPlot
@@ -293,6 +293,7 @@ if para.DebugPlot
     disp('--------------------------------------------------')
     disp('Succeed!')
 end
+
 %% Functions
 % ------------------eigen analysis-----------------------------------------
     function [EigenVector, EigenValue] = EigenAnalysis(point)

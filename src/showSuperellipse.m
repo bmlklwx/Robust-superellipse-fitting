@@ -14,7 +14,7 @@ for k = 1 : size(varargin, 2)
         arclength= varargin{k + 1};
     end
 end
-
+x(1) = max(x(1), 0.007);
 [point] = uniformSampledSuperellipse(x, arclength, 0);
 point(:, end + 1) = point(:, 1);
 plot(point(1, :), point(2, :), 'Color', color)

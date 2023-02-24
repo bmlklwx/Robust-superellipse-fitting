@@ -4,12 +4,12 @@ addpath('./src')
 
 % random superellipse
 x_gt = [max(rand * 2, 0.01), ...
-       (rand - 0.5) * 5 + 3, (rand - 0.5) * 5 + 3, ...
-       rand * 2 * pi, (rand - 0.5) * 5, (rand - 0.5) * 5];
+       (rand - 0.5) * 1 + 2, (rand - 0.5) * 1 + 2, ...
+       rand * 2 * pi, (rand - 0.5) * 2, (rand - 0.5) * 2];
    
 points =  uniformSampledSuperellipse(x_gt, 0.2, 0);
 %-------------partial points----------------------
-partial_ratio = 0.6; % keep 60% of the points
+partial_ratio = 0.8; % keep 60% of the points
 k = floor(partial_ratio * size(points, 2));
 idx = randi(size(points, 2));
 distance = vecnorm(points - points(:, idx));
@@ -24,9 +24,15 @@ num_out = round(outlier_ratio * num_point);
 sigma = mean(eig((points - mean(points, 2)) * (points - mean(points, 2))'/num_point));
 outlier = mvnrnd(mean(points, 2)', 2 * sigma * eye(2), num_out)';
 points = [points, outlier];
-%-------------------------------------------------
 
-x = EMS2D(points, 'OutlierRatio', 0.9, 'DebugPlot', true);
+%--------------add noise--------------------------
+noise = mvnrnd([0 0], 0.002 * eye(2), size(points, 2))';
+points = points + noise;
+
+tic
+x = EMS2D(points, 'OutlierRatio', 0.6, 'DebugPlot', false);
+toc
+
 disp('Ground truth is ')
 disp(x_gt)
 disp('Fitting result is ')
