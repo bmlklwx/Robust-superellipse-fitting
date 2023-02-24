@@ -3,27 +3,27 @@ function [x, p] = EMS2D(point, varargin)
 % Written by Weixiao Liu @ JHU, NUS
 % Initialized on Feb 24th, 2023, Singapore
 % -------------------------------------------------------------------------
-% DESCRIPTION: This algorithm solves for the optimal superquadrics (SQ) fitting of a given
+% DESCRIPTION: This algorithm solves for the optimal superellipse fitting of a given
 %              point cloud. Probabilistic model is adpot to formulate the problem, and
 %              thus is roubust enough to tolerate some amount of outliers. The outlier
 %              probability is treated as a hidden random variable and is updated via
-%              the Bayes' rule (EM algorithm). The parameters of the superquadric is
+%              the Bayes' rule (EM algorithm). The parameters of the superellipse is
 %              solved iteratively via maximum likelihood estimation.
 %
 % INPUT: point - point cloud array (3 x N)
 %        varargin(optional):
-%        'OutlierRatio'        - prior outlier probability [0, 1) (default: 0.1)
+%        'OutlierRatio'        - prior outlier probability [0, 1) (default: 0.8)
 %                                we recommend 0 when dealing with clean point cloud.
-%        'MaxIterationEM'      - maximum number of EM iterations (default: 20)
-%        'ToleranceEM'         - absolute tolerance of EM (default: 1e-3)
+%        'MaxIterationEM'      - maximum number of EM iterations (default: 30)
+%        'ToleranceEM'         - absolute tolerance of EM (default: 1e-5)
 %        'RelativeToleranceEM' - relative tolerance of EM (default: 1e-1)
-%        'MaxOptiIterations'   - maximum number of optimization iterations per M (default: 2)
+%        'MaxOptiIterations'   - maximum number of optimization iterations per M (default: 10)
 %        'Sigma'               - initial sigma^2 (default: 0 - auto generate)
-%        'MaxSwitch'           - maximum number of switches allowed (default: 2)
+%        'MaxSwitch'           - maximum number of switches allowed (default: 5)
 %        'AdaptiveUpperBound'  - introduce adaptive upper bound to restrict the volume of SQ (default: false)
-%        'Rescale'             - normalize the input point cloud (default: true)
+%        'Rescale'             - normalize the input point cloud (default: false)
 %
-% OUTPUT: x - fitted superquadrics parameters
+% OUTPUT: x - fitted superellipse parameters
 %         p - outlier probability of the corresponding points
 % -------------------------------------------------------------------------
 %% Configuration
