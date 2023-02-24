@@ -1,8 +1,7 @@
-function [x] = EMS2D(point, varargin)
+function [x, p] = EMS2D(point, varargin)
 
 % Written by Weixiao Liu @ JHU, NUS
-%            Yuwei Wu @ NUS
-% Initialized on May 24th, 2021, Singapore
+% Initialized on Feb 24th, 2023, Singapore
 % -------------------------------------------------------------------------
 % DESCRIPTION: This algorithm solves for the optimal superquadrics (SQ) fitting of a given
 %              point cloud. Probabilistic model is adpot to formulate the problem, and
@@ -79,7 +78,8 @@ if para.DebugPlot
     showSuperellipse(x0, 'Color', 'g')
     hold off
     title('Init')
-    pause
+    disp('Started in debug mode, please enter in the command window to continue!')
+    pause    
 end
 %-------------------------------------------
 
@@ -201,9 +201,7 @@ for iterEM = 1 : iterEM_max
         if scale_ratio > 0.6 && scale_ratio < 1.4
             eul_rot = x(4) + 45*pi/180;
             eul_rot = atan(sin(eul_rot)/cos(eul_rot));
-            x_candidate = [2 - x(1), ((1 - sqrt(2)) * x(1) + sqrt(2)) * min(x(2), x(3)) * ones(1, 2), eul_rot, x(5 : 6)];
-            
-            
+            x_candidate = [max(2 - x(1), 1e-2), ((1 - sqrt(2)) * x(1) + sqrt(2)) * min(x(2), x(3)) * ones(1, 2), eul_rot, x(5 : 6)];                        
             %-------------------------------------------
             if para.DebugPlot
                 figure(1)
@@ -238,7 +236,9 @@ for iterEM = 1 : iterEM_max
                 pause
             end
             %-------------------------------------------
-            
+            [dist_switch] = distance(point, x_switch);
+            p = correspendence(dist_switch, sigma2, w, p0);
+            cost_switch = sum(weighted_dist(x_switch, point, p).^2);
             if cost_switch < min(cost_n, cost)
                 x = x_switch;
                 cost = cost_switch;
@@ -356,7 +356,7 @@ end
             'Sigma', 0, ...
             'MaxSwitch', 3, ...
             'AdaptiveUpperBound', true, ...
-            'Rescale', true,...
+            'Rescale', false,...
             'DebugPlot', false);
         
         parser = inputParser;

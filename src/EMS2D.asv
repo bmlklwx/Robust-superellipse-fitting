@@ -1,8 +1,7 @@
-function [x] = EMS2D(point, varargin)
+function [x, p] = EMS2D(point, varargin)
 
 % Written by Weixiao Liu @ JHU, NUS
-%            Yuwei Wu @ NUS
-% Initialized on May 24th, 2021, Singapore
+% Initialized on Feb 24th, 2023, Singapore
 % -------------------------------------------------------------------------
 % DESCRIPTION: This algorithm solves for the optimal superquadrics (SQ) fitting of a given
 %              point cloud. Probabilistic model is adpot to formulate the problem, and
@@ -66,18 +65,22 @@ euler0 = atan2(EigenVector(2,1), EigenVector(1,1));
 
 % initialize scale as median along transformed axis
 point_rot0 = EigenVector' * point;
-s0 = [median(abs(point_rot0(1, :))), median(abs(point_rot0(2, :)))] * 0.5;
+s0 = [median(abs(point_rot0(1, :))), median(abs(point_rot0(2, :)))] * 1;
 
 % initial configuration
 x0 = [1, reshape(s0, [1, 2]), euler0, zeros(1, 2)];
 
 %-------------------------------------------
-figure(1)
-showPoints(points)
-hold on
-showSuperellipse(x_0, 'Color', 'g')
-hold off
-title('Init')
+if para.DebugPlot
+    figure(1)
+    showPoints(point)
+    hold on
+    showSuperellipse(x0, 'Color', 'g')
+    hold off
+    title('Init')
+    disp('Started in debug mode, please enter in the command window to continue!')
+    pause    
+end
 %-------------------------------------------
 
 
@@ -97,7 +100,7 @@ p0 = 1 / V;
 
 % initialize variance for gaussian model
 if para.Sigma == 0
-    sigma2 = V ^ (1 / 2) / 3;
+    sigma2 = V ^ (1 / 2) / 10;
 else
     sigma2 = para.Sigma;
 end
@@ -137,47 +140,80 @@ for iterEM = 1 : iterEM_max
     
     % evaluate relative cost decrease
     relative_cost = (cost - cost_n) / cost_n;
+    if para.DebugPlot
+    disp('--------------------------------------------------')
     disp(['relative_cost: ', num2str(relative_cost)])
     disp(['cost: ', num2str(cost)])
     disp(['cost_n: ', num2str(cost_n)])
+    end
     %-------------------------------------------
-    figure(1)
-    showPoints(points)
-    hold on
-    showSuperellipse(x_n, 'Color', 'g')
-    hold off
-    title(['Trial', num2str(iterEM)])
+    if para.DebugPlot
+        figure(1)
+        showPoints(point)
+        hold on
+        showSuperellipse(x_n, 'Color', 'g')
+        hold off
+        title(['Trial', num2str(iterEM)])
+        pause
+    end
     %-------------------------------------------
     
     if (cost_n < toleranceEM && iterEM > 1) || ...
             (relative_cost < relative_toleranceEM ...
             && switched >= para.MaxSwitch && iterEM > iterEM_min)
         x = x_n;
-            %-------------------------------------------
+        %-------------------------------------------
+        if para.DebugPlot
             figure(1)
-            showPoints(points)
+            showPoints(point)
             hold on
-            showSuperellipse(x_n, 'Color', 'g')
+            showSuperellipse(x, 'Color', 'g')
             hold off
-            title(['Well-fitte])
-%           -------------------------------------------
+            title('Final')
+            pause
+        end
+        %-------------------------------------------
         break
     end
     
     % set different tolerance for switch and termination
     if relative_cost < relative_toleranceEM && iterEM ~= 1
-        
+        if para.DebugPlot
+            disp('Enter switching...')
+        end
+        %-------------------------------------------
+        if para.DebugPlot
+            figure(1)
+            showPoints(point)
+            hold on
+            showSuperellipse(x_n, 'Color', 'g')
+            hold off
+            title('Enter switch')
+            pause
+        end
+        %-------------------------------------------
         % activate switching algorithm to avoid local minimum
         switch_success = 0;
         
-        % case2 - duality similarity and combinations
+        % duality similarity
         scale_ratio = x(2) / x(3);
         
         if scale_ratio > 0.6 && scale_ratio < 1.4
             eul_rot = x(4) + 45*pi/180;
             eul_rot = atan(sin(eul_rot)/cos(eul_rot));
-            x_candidate = [2 - x(1), ((1 - sqrt(2)) * x(1) + sqrt(2)) * min(x(2), x(3)) * ones(1, 2), eul_rot, x(5 : 6)];                      
-            
+            x_candidate = [2 - x(1), ((1 - sqrt(2)) * x(1) + sqrt(2)) * min(x(2), x(3)) * ones(1, 2), eul_rot, x(5 : 6)];                        
+            %-------------------------------------------
+            if para.DebugPlot
+                figure(1)
+                showPoints(point)
+                hold on
+                showSuperellipse(x_n, 'Color', 'g')
+                showSuperellipse(x_candidate, 'Color', 'b')
+                hold off
+                title('Candidate in blue')
+                pause
+            end
+            %-------------------------------------------
             % introduce adaptive upper bound
             if  adaptive_upper == 1
                 R_current = angle2rotm(x_candidate(4));
@@ -188,21 +224,57 @@ for iterEM = 1 : iterEM_max
             end
             
             [x_switch, cost_switch] = lsqnonlin(cost_func, x_candidate, lb, ub, options);
+            %-------------------------------------------
+            if para.DebugPlot
+                figure(1)
+                showPoints(point)
+                hold on
+                showSuperellipse(x_n, 'Color', 'g')
+                showSuperellipse(x_switch, 'Color', 'b')
+                hold off
+                title('Candidate updated in blue')
+                pause
+            end
+            %-------------------------------------------
             
-            if cost_switch < min(cost_n, cost)                
+            if cost_switch < min(cost_n, cost)
                 x = x_switch;
-                cost = cost_switch;              
+                cost = cost_switch;
                 % update sigma
                 sigma2 = cost_switch / (2 * sum(p));
-                switch_success = 1;             
+                switch_success = 1;
+                %-------------------------------------------
+                if para.DebugPlot
+                    figure(1)
+                    showPoints(point)
+                    hold on
+                    showSuperellipse(x_n, 'Color', 'g')
+                    showSuperellipse(x, 'Color', 'b')
+                    hold off
+                    title('Candidate switch success')
+                    disp('Swith succeed')
+                    pause
+                end
+                %-------------------------------------------
             end
-        end             
+        end
         if switch_success == 0
             cost = cost_n;
             sigma2 = sigma2_n;
             x = x_n;
+            %-------------------------------------------
+            if para.DebugPlot
+                figure(1)
+                showPoints(point)
+                hold on
+                showSuperellipse(x_n, 'Color', 'g')
+                hold off
+                title('Candidate failed, return to x_n')
+                disp('Fail in switch, return to x_n')
+                pause
+            end
+            %-------------------------------------------
         end
-        
         switched = switched + 1;
     else
         cost = cost_n;
@@ -218,7 +290,10 @@ end
 
 % transform back from the center of mass
 x(5 : 6) = x(5 : 6) + t0';
-
+if para.DebugPlot
+disp('--------------------------------------------------')
+disp('Succeed!')
+end
 %% Functions
 % ------------------eigen analysis-----------------------------------------
     function [EigenVector, EigenValue] = EigenAnalysis(point)
@@ -271,7 +346,7 @@ x(5 : 6) = x(5 : 6) + t0';
         end
         
         % set input parser
-        defaults = struct('OutlierRatio', 0.2, ...
+        defaults = struct('OutlierRatio', 0.8, ...
             'MaxIterationEM', 50, ...
             'ToleranceEM', 1e-5, ...
             'RelativeToleranceEM', 1e-3, ...
@@ -279,7 +354,8 @@ x(5 : 6) = x(5 : 6) + t0';
             'Sigma', 0, ...
             'MaxSwitch', 3, ...
             'AdaptiveUpperBound', true, ...
-            'Rescale', true);
+            'Rescale', true,...
+            'DebugPlot', false);
         
         parser = inputParser;
         parser.CaseSensitive = false;
@@ -300,6 +376,7 @@ x(5 : 6) = x(5 : 6) + t0';
             @(x)validateattributes(x, {'single', 'double'}, {'real', 'nonsparse', 'nonempty', 'scalar', 'nonnan', 'finite', 'integer', 'nonnegative'}));
         parser.addParameter('AdaptiveUpperBound', defaults.AdaptiveUpperBound, @islogical);
         parser.addParameter('Rescale', defaults.Rescale, @islogical);
+        parser.addParameter('DebugPlot', defaults.DebugPlot, @islogical);
         
         parser.parse(varargin{:});
         para = parser.Results;
