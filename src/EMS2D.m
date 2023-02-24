@@ -34,7 +34,7 @@ function [x, p] = EMS2D(point, varargin)
 % set EMS parameters
 w = para.OutlierRatio;
 iterEM_max = para.MaxIterationEM;
-iterEM_min = 5;
+iterEM_min = 3;
 toleranceEM = para.ToleranceEM;
 relative_toleranceEM = para.RelativeToleranceEM;
 adaptive_upper = para.AdaptiveUpperBound;
@@ -79,7 +79,7 @@ if para.DebugPlot
     hold off
     title('Init')
     disp('Started in debug mode, please enter in the command window to continue!')
-    pause    
+    pause
 end
 %-------------------------------------------
 
@@ -100,7 +100,7 @@ p0 = 1 / V;
 
 % initialize variance for gaussian model
 if para.Sigma == 0
-    sigma2 = V ^ (1 / 2) / 10;
+    sigma2 = V ^ (1 / 2) / 1;
 else
     sigma2 = para.Sigma;
 end
@@ -141,10 +141,10 @@ for iterEM = 1 : iterEM_max
     % evaluate relative cost decrease
     relative_cost = (cost - cost_n) / cost_n;
     if para.DebugPlot
-    disp('--------------------------------------------------')
-    disp(['relative_cost: ', num2str(relative_cost)])
-    disp(['cost: ', num2str(cost)])
-    disp(['cost_n: ', num2str(cost_n)])
+        disp('--------------------------------------------------')
+        disp(['relative_cost: ', num2str(relative_cost)])
+        disp(['cost: ', num2str(cost)])
+        disp(['cost_n: ', num2str(cost_n)])
     end
     %-------------------------------------------
     if para.DebugPlot
@@ -196,70 +196,67 @@ for iterEM = 1 : iterEM_max
         switch_success = 0;
         
         % duality similarity
-        scale_ratio = x(2) / x(3);
-        
-        if scale_ratio > 0.6 && scale_ratio < 1.4
-            eul_rot = x(4) + 45*pi/180;
-            eul_rot = atan(sin(eul_rot)/cos(eul_rot));
-            x_candidate = [max(2 - x(1), 1e-2), ((1 - sqrt(2)) * x(1) + sqrt(2)) * min(x(2), x(3)) * ones(1, 2), eul_rot, x(5 : 6)];                        
-            %-------------------------------------------
-            if para.DebugPlot
-                figure(1)
-                showPoints(point)
-                hold on
-                showSuperellipse(x_n, 'Color', 'g')
-                showSuperellipse(x_candidate, 'Color', 'b')
-                hold off
-                title('Candidate in blue')
-                pause
-            end
-            %-------------------------------------------
-            % introduce adaptive upper bound
-            if  adaptive_upper == 1
-                R_current = angle2rotm(x_candidate(4));
-                point_rot_current = R_current' * point - R_current' * x_candidate(5 : 6)';
-                ub_a = 1.1 * [max(abs(point_rot_current(1, :))), max(abs(point_rot_current(2, :)))];
-                ub = [2.0 ub_a  2*pi ub_a];
-                lb = [0.0 0.01 0.01 -2*pi -ub_a];
-            end
-            
-            [x_switch, cost_switch] = lsqnonlin(cost_func, x_candidate, lb, ub, options);
-            %-------------------------------------------
-            if para.DebugPlot
-                figure(1)
-                showPoints(point)
-                hold on
-                showSuperellipse(x_n, 'Color', 'g')
-                showSuperellipse(x_switch, 'Color', 'b')
-                hold off
-                title('Candidate updated in blue')
-                pause
-            end
-            %-------------------------------------------
-            [dist_switch] = distance(point, x_switch);
-            p = correspendence(dist_switch, sigma2, w, p0);
-            cost_switch = sum(weighted_dist(x_switch, point, p).^2);
-            if cost_switch < min(cost_n, cost)
-                x = x_switch;
-                cost = cost_switch;
-                % update sigma
-                sigma2 = cost_switch / (2 * sum(p));
-                switch_success = 1;
-                %-------------------------------------------
-                if para.DebugPlot
-                    figure(1)
-                    showPoints(point)
-                    hold on
-                    showSuperellipse(x_n, 'Color', 'g')
-                    showSuperellipse(x, 'Color', 'b')
-                    hold off
-                    title('Candidate switch success')
-                    disp('Swith succeed')
-                    pause
-                end
-                %-------------------------------------------
-            end
+        eul_rot = x(4) + 45*pi/180;
+        eul_rot = atan(sin(eul_rot)/cos(eul_rot));
+        x_candidate = [max(2 - x(1), 1e-2), ((1 - sqrt(2)) * x(1) + sqrt(2)) * min(x(2), x(3)) * ones(1, 2), eul_rot, x(5 : 6)];
+        %-------------------------------------------
+        if para.DebugPlot
+            figure(1)
+            showPoints(point)
+            hold on
+            showSuperellipse(x_n, 'Color', 'g')
+            showSuperellipse(x_candidate, 'Color', 'b')
+            hold off
+            title('Candidate in blue')
+            pause
         end
+        %-------------------------------------------
+        % introduce adaptive upper bound
+        if  adaptive_upper == 1
+            R_current = angle2rotm(x_candidate(4));
+            point_rot_current = R_current' * point - R_current' * x_candidate(5 : 6)';
+            ub_a = 1.1 * [max(abs(point_rot_current(1, :))), max(abs(point_rot_current(2, :)))];
+            ub = [2.0 ub_a  2*pi ub_a];
+            lb = [0.0 0.01 0.01 -2*pi -ub_a];
+        end
+        
+        [x_switch, ~] = lsqnonlin(cost_func, x_candidate, lb, ub, options);
+        %-------------------------------------------
+        if para.DebugPlot
+            figure(1)
+            showPoints(point)
+            hold on
+            showSuperellipse(x_n, 'Color', 'g')
+            showSuperellipse(x_switch, 'Color', 'b')
+            hold off
+            title('Candidate updated in blue')
+            pause
+        end
+        %-------------------------------------------
+        [dist_switch] = distance(point, x_switch);
+        p = correspendence(dist_switch, sigma2, w, p0);
+        cost_switch = sum(weighted_dist(x_switch, point, p).^2);
+        if cost_switch < min(cost_n, cost)
+            x = x_switch;
+            cost = cost_switch;
+            % update sigma
+            sigma2 = cost_switch / (2 * sum(p));
+            switch_success = 1;
+            %-------------------------------------------
+            if para.DebugPlot
+                figure(1)
+                showPoints(point)
+                hold on
+                showSuperellipse(x_n, 'Color', 'g')
+                showSuperellipse(x, 'Color', 'b')
+                hold off
+                title('Candidate switch success')
+                disp('Swith succeed')
+                pause
+            end
+            %-------------------------------------------
+        end
+        
         if switch_success == 0
             cost = cost_n;
             sigma2 = sigma2_n;
@@ -293,8 +290,8 @@ end
 % transform back from the center of mass
 x(5 : 6) = x(5 : 6) + t0';
 if para.DebugPlot
-disp('--------------------------------------------------')
-disp('Succeed!')
+    disp('--------------------------------------------------')
+    disp('Succeed!')
 end
 %% Functions
 % ------------------eigen analysis-----------------------------------------
@@ -349,13 +346,13 @@ end
         
         % set input parser
         defaults = struct('OutlierRatio', 0.8, ...
-            'MaxIterationEM', 50, ...
+            'MaxIterationEM', 30, ...
             'ToleranceEM', 1e-5, ...
-            'RelativeToleranceEM', 1e-3, ...
-            'MaxOptiIterations', 5, ...
+            'RelativeToleranceEM', 1e-1, ...
+            'MaxOptiIterations', 10, ...
             'Sigma', 0, ...
-            'MaxSwitch', 3, ...
-            'AdaptiveUpperBound', true, ...
+            'MaxSwitch', 5, ...
+            'AdaptiveUpperBound', false, ...
             'Rescale', false,...
             'DebugPlot', false);
         
