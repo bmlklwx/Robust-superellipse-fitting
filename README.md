@@ -8,9 +8,9 @@ The original work is to fit [superquadrics](https://en.wikipedia.org/wiki/Supere
 This is a simple variant to the original paper to solve [superellipse](https://en.wikipedia.org/wiki/Superellipse)(also know as Lamé curve) fitting problem in 2D cases.
 The demo shows the fitting results to randomly generated superellipse-shaped point clouds, with large amount of noise and outliers.
 
-<img src="/figures/demo1.jpg" alt="superquadrics1" width="300"/><img src="/figures/demo2.jpg" alt="superquadrics2" width="300"/><img src="/figures/demo3.jpg" alt="superquadrics3" width="300"/>
+<img src="/figures/demo1.jpg" alt="superquadrics1" width="200"/><img src="/figures/demo2.jpg" alt="superquadrics2" width="200"/><img src="/figures/demo3.jpg" alt="superquadrics3" width="200"/>
 
-<img src="/figures/demo4.jpg" alt="superquadrics4" width="300"/><img src="/figures/demo5.jpg" alt="superquadrics5" width="300"/><img src="/figures/demo6.jpg" alt="superquadrics6" width="300"/>
+<img src="/figures/demo4.jpg" alt="superquadrics4" width="200"/><img src="/figures/demo5.jpg" alt="superquadrics5" width="200"/><img src="/figures/demo6.jpg" alt="superquadrics6" width="200"/>
 
 For visitors interested in more complex 3D superquadrics fitting, please visit this [repository](https://github.com/bmlklwx/EMS-superquadric_fitting).
 
